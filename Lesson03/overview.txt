@@ -1,0 +1,2 @@
+Câu lệnh tạo mới :npm create vite@latest cart
+=>>> Chạy chương trình: npm run dev 

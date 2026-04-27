@@ -1,0 +1,3 @@
+npx create-react-app ten-du-an
+npm install
+npm start

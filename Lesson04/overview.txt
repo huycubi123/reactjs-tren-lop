@@ -1,0 +1,6 @@
+React Hook: 
+- Là phiên bản nâng cấp bổ sung của ReactJS
+- Sử dụng state và các tính năng khác của React mà không cần Class
+- Không ảnh hướng tính năng và logic cũ. Người dùng có thể dùng Hook và toàn bộ tính năng trước đó 
+
++) usestate()  
