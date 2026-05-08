@@ -1,0 +1,48 @@
+1. Lấy các thư mục img , css, font thư viện js -bootrap (gần như không dùng file js)  sang phần asset 
+2. Chuyển đoạn container trong html sang jsx để copy vào phần return trong App.jsx 
+3. link các cái css như trong index bên ngoài vào index của Project của Project
+4. Cắt file JSX thành các component nhỏ hơn 
+5. Xác định các chức năng và xử lý: 
+    5.1 Hiển thị dsach sản phẩm 
+        - Lấy dữ liệu: Khai báo 
+            + Lấy dữ liệu từ API 
+            + localStorage / SessionStorage / cookies
+            + tự khai báo (trường hợp chỉ có render không sử dụng các chức năng như tìm kiếm, ...)
+
+        - Render dữ liệu: 
+            + Dữ liệu từ App.jsx (khai báo) - Truyển dữ liệu xuống (ListProduct) -> Truyển xuống (Product)
+
+            + Dữ liệu truyển xuống (khai báo ở <ListProduct listProduct={listProduct}>) bắt bằng props :
+                - const {listProduct} = props;
+                - Sau đó duyệt qua từng phần tử 
+                -  const renderListProduct = () => {
+                    return listProduct.map((product) => {
+                    return <Product key={product.id} product={product}/>
+                  })
+                - Sau đó thay thế các {Product} ở dưới bằng renderListProduct()
+
+            + Xử lý truyền xuống cho phần Product
+                - Ở ListProduct đã duyệt qua từng sản phẩm rồi 
+                - Ở Prooduct khai báo biến product từ props sau đó gán cho từng giá trị tương ứng ở dưới: (id ,name , đường dẫn ảnh ,...)
+                const {tên_biến , ... } = props  (với hook - function)
+
+        - Xử lý trường hợp đặc biệt khi render (Disnable, ... ) (trường hợp này là trong phần input (hết hàng))
+             Thêm ngoặc xoắn và phải có <></> rồi xử lý logic bình thường 
+       *********** NOTE:       
+             <></> : Khi return chỉ cho phép return ra 1 khối, trường hợp đoạn return có nhiều khối chưa đc bao trong 1 thẻ div 
+             VD: button, input ,... thì dùng để gốp thành 1 khối trống để không bị thêm khối div làm ảnh hưởng css 
+        
+        - Xây dựng chức năng 
+          + Xác định sự kiện đi từ coponent nào đến component nào ? 
+            ++ Product -> ListProduct -> Product -> App -> ListCart -> Cart/Alert 
+
+          + Sử dụng phương thưc gì để giao tiếp giữa các component ?    
+            ++ Truyển lên : từ Product -> ListProduct -> Product -> App : props.on 
+            ++ Truyền xuống: từ App -> ListCart -> Cart/Alert: props
+
+          + Quản lý dữ liệu listCart dùng ? : useState
+          
+
+
+
+         
