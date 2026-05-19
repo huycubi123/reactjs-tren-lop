@@ -5,7 +5,7 @@
 import { useState } from "react";
 
 import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
+import viteLogo from "./assets/vite.svg";   
 import heroImg from "./assets/hero.png";
 
 import Header from "./components/Header";
@@ -82,7 +82,13 @@ function App() {
   // - truyền xuống Alert
   // - đồng bộ dữ liệu toàn ứng dụng
 
-  const [listCart, setListCart] = useState([]);
+  const [listCart, setListCart] = useState(() => {
+    // Lấy dữ liệu giỏ hàng từ localStorage
+    const saveCart = localStorage.getItem("cartData");
+
+    // Nếu có dữ liệu thì parse chuỗi JSON về mảng , nếu không thì trả về mảng rỗng
+    return saveCart ? JSON.parse(saveCart) : [];
+  });
 
   // ==================================================
   // 3. NHẬN DỮ LIỆU MUA HÀNG TỪ COMPONENT CON
@@ -106,13 +112,13 @@ function App() {
     // Không thao tác trực tiếp với state
     // mà tạo ra một mảng mới để xử lý
 
-    let list = listCart;
+    let list = [...listCart];
 
     // findIndex():
     // - tìm vị trí sản phẩm trong mảng
     // - nếu không tìm thấy sẽ trả về -1
 
-    let index = list.findIndex((item) => item.idProduct === cart.idProduct);
+    let index = list.findIndex((item) => item.product.id === cart.product.id);
 
     // ==================================================
     // NẾU SẢN PHẨM ĐÃ TỒN TẠI
@@ -132,14 +138,46 @@ function App() {
     else {
       list.push(cart);
     }
-
     console.log("List Cart: ", list);
-
+    // cập nhật lại localStorage với dữ liệu giỏ hàng mới
+    localStorage.setItem("cartData", JSON.stringify(list));
     // ==================================================
     // CẬP NHẬT LẠI STATE GIỎ HÀNG
     // ==================================================
 
     setListCart(list);
+    console.log("Giỏ hàng cập nhật: ", newListCart);
+  };
+
+  // ==================================================
+
+  // --- BƯỚC 2.2: XỬ LÝ SỰ KIỆN XÓA SẢN PHẨM KHỎI GIỎ HÀNG ---
+  const handlerDelete = (idProduct) => {
+    // Tạo bản sao của listCart
+    let newListCart = [...listCart];
+
+    // Lọc bỏ sản phẩm có id trùng với id truyền lên
+    newListCart = newListCart.filter((item) => item.product.id !== idProduct);
+
+    // Đồng bộ localStorage và cập nhật State
+    localStorage.setItem("cartData", JSON.stringify(newListCart));
+    setListCart(newListCart);
+  };
+  // --- BƯỚC 2.3: XỬ LÝ SỰ KIỆN CẬP NHẬT SỐ LƯỢNG MUA TRONG GIỎ ---
+  const handlerUpdate = (idProduct, newQuantity) => {
+    let newListCart = [...listCart];
+
+    // Tìm vị trí sản phẩm cần cập nhật số lượng
+    let index = newListCart.findIndex((item) => item.product.id === idProduct);
+
+    if (index !== -1) {
+      // Cập nhật lại số lượng mua mới
+      newListCart[index].quantityBuy = Number(newQuantity);
+
+      // Đồng bộ localStorage và cập nhật State
+      localStorage.setItem("CART_DATA", JSON.stringify(newListCart));
+      setListCart(newListCart);
+    }
   };
 
   return (
@@ -164,9 +202,18 @@ function App() {
 
             onBuy:
             hàm nhận dữ liệu mua hàng từ component con product
+
+            onDelete:
+            hàm nhận dữ liệu xóa sản phẩm khỏi giỏ hàng từ component con cart
+            
+            onUpdate:
+            hàm nhận dữ liệu cập nhật số lượng mua trong giỏ hàng từ component con cart
           */}
 
-          <ListProduct listProduct={listProduct} onBuy={handlerBuy} />
+          <ListProduct
+            listProduct={listProduct}
+            onBuy={handlerBuy}
+          />
 
           {/* ==============================
               GIỎ HÀNG VÀ THÔNG BÁO
@@ -174,7 +221,9 @@ function App() {
 
           <div className="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             {/* Hiển thị danh sách sản phẩm đã mua */}
-            <ListCart />
+            {/* Truyền dữ liệu từ App xuống ListCart để hiển thị */}
+            {/*  */}
+            <ListCart listCart={listCart} onDelete={handlerDelete} onUpdate={handlerUpdate}/>
 
             {/* Hiển thị thông báo mua hàng */}
             <Alert />

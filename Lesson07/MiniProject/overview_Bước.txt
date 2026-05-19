@@ -2,45 +2,106 @@
 2. Chuyển đoạn container trong html sang jsx để copy vào phần return trong App.jsx 
 3. link các cái css như trong index bên ngoài vào index của Project của Project
 4. Cắt file JSX thành các component nhỏ hơn 
-5. Xác định các chức năng và xử lý: 
-    5.1 Hiển thị dsach sản phẩm 
-        - Lấy dữ liệu: Khai báo 
-            + Lấy dữ liệu từ API 
-            + localStorage / SessionStorage / cookies
-            + tự khai báo (trường hợp chỉ có render không sử dụng các chức năng như tìm kiếm, ...)
+5. XÁC ĐỊNH CÁC CHỨC NĂNG VÀ XỬ LÝ 
+Sau khi đã hoàn thành việc cắt component nhỏ (Header, ListProduct, Product, ListCart, Cart, Alert), ta bắt đầu code chức năng theo thứ tự logic sau:
 
-        - Render dữ liệu: 
-            + Dữ liệu từ App.jsx (khai báo) - Truyển dữ liệu xuống (ListProduct) -> Truyển xuống (Product)
+==============================================================================
+BƯỚC A: HIỂN THỊ DANH SÁCH SẢN PHẨM GỐC (Luồng đổ từ trên xuống)
+- Mục tiêu: Đưa dữ liệu thô hiển thị lên màn hình.
 
-            + Dữ liệu truyển xuống (khai báo ở <ListProduct listProduct={listProduct}>) bắt bằng props :
-                - const {listProduct} = props;
-                - Sau đó duyệt qua từng phần tử 
-                -  const renderListProduct = () => {
-                    return listProduct.map((product) => {
-                    return <Product key={product.id} product={product}/>
-                  })
-                - Sau đó thay thế các {Product} ở dưới bằng renderListProduct()
+1. Bắt đầu tại file App.jsx:
+   - Khai báo: Dùng useState để định nghĩa mảng dữ liệu gốc listProduct (chứa tên, giá, ảnh, số lượng kho).
+   - Truyền xuống: Đẩy mảng này xuống component <ListProduct> bằng thuộc tính (prop) cùng tên.
+   - Code quan trọng:
+     const [listProduct, setListProduct] = useState([ ... ]);
+     <ListProduct listProduct={listProduct} />
 
-            + Xử lý truyền xuống cho phần Product
-                - Ở ListProduct đã duyệt qua từng sản phẩm rồi 
-                - Ở Prooduct khai báo biến product từ props sau đó gán cho từng giá trị tương ứng ở dưới: (id ,name , đường dẫn ảnh ,...)
-                const {tên_biến , ... } = props  (với hook - function)
+2. Di chuyển sang file ListProduct.jsx:
+   - Nhận dữ liệu: Dùng cú pháp bóc tách (destructuring) để lấy listProduct từ props.
+   - Duyệt mảng: Viết hàm renderListProduct, dùng .map() duyệt qua mảng để chuyển từng object sản phẩm thành component <Product />. Lưu ý: Bắt buộc truyền key={product.id}.
+   - Code quan trọng:
+     listProduct.map((product) => <Product key={product.id} product={product} />)
 
-        - Xử lý trường hợp đặc biệt khi render (Disnable, ... ) (trường hợp này là trong phần input (hết hàng))
-             Thêm ngoặc xoắn và phải có <></> rồi xử lý logic bình thường 
-       *********** NOTE:       
-             <></> : Khi return chỉ cho phép return ra 1 khối, trường hợp đoạn return có nhiều khối chưa đc bao trong 1 thẻ div 
-             VD: button, input ,... thì dùng để gốp thành 1 khối trống để không bị thêm khối div làm ảnh hưởng css 
-        
-        - Xây dựng chức năng 
-          + Xác định sự kiện đi từ coponent nào đến component nào ? 
-            ++ Product -> ListProduct -> Product -> App -> ListCart -> Cart/Alert 
+3. Kết thúc tại file Product.jsx:
+   - Nhận dữ liệu: Nhận object product từ props.
+   - Đổ ra giao diện (UI): Thay các phần text cứng bằng {product.name}, {product.price}, {product.image}.
+   - Xử lý đặc biệt (Hết hàng): Dùng toán tử ba ngôi product.quantity > 0 ? (...) : (...) để ẩn input/nút mua nếu kho bằng 0.
 
-          + Sử dụng phương thưc gì để giao tiếp giữa các component ?    
-            ++ Truyển lên : từ Product -> ListProduct -> Product -> App : props.on 
-            ++ Truyền xuống: từ App -> ListCart -> Cart/Alert: props
+==============================================================================
+BƯỚC B: XÂY DỰNG CHỨC NĂNG MUA HÀNG (Luồng bắn từ dưới lên)
+- Mục tiêu: Click "Mua hàng" thì sản phẩm bay vào giỏ.
 
-          + Quản lý dữ liệu listCart dùng ? : useState
+1. Bắt đầu tại file Product.jsx:
+   - Khai báo State local: Tạo quantityBuy để lưu số lượng người dùng muốn mua (mặc định là 1).
+   - Kiểm soát ô input: Gắn hàm onChange để kiểm tra điều kiện (không < 1, không vượt quá product.quantity).
+   - Bắn sự kiện: Viết hàm handleBuy. Khi click nút, chặn reload trang (e.preventDefault()), đóng gói thành object cart = { quantityBuy, product } rồi gọi hàm callback của cha truyền xuống để bắn ngược dữ liệu lên.
+   - Code quan trọng:
+     props.onBuy(cart);
+
+2. Chuyển tiếp tại file ListProduct.jsx:
+   - Đóng vai trò bưu tá trung chuyển: Nhận hàm onBuy từ App, truyền tiếp nó vào component <Product onBuy={handleBuy} />.
+
+3. Xử lý trung tâm tại file App.jsx:
+   - Khai báo giỏ hàng: Tạo state const [listCart, setListCart] = useState([]);
+   - Viết hàm xử lý handlerBuy(cart):
+     * Tạo bản sao mảng bằng spread operator: let list = [...listCart];
+     * Dùng .findIndex() check xem sản phẩm đã có trong giỏ chưa. 
+     * Nếu có (index !== -1) thì cộng dồn quantityBuy. Nếu chưa có thì list.push(cart).
+   - Cập nhật lại state: setListCart(list);
+
+==============================================================================
+BƯỚC C: HOÀN THIỆN HIỂN THỊ GIỎ HÀNG & TÍNH TỔNG (Luồng hiển thị)
+- Mục tiêu: Hiện danh sách đã mua và tự nhảy số tiền.
+
+1. Tại file App.jsx:
+   - Truyền state listCart xuống cho <ListCart listCart={listCart} />.
+
+2. Tại file ListCart.jsx:
+   - Nhận listCart. Viết hàm .map() để render ra các component con <Cart />.
+   - Tính toán không dùng State (Data Compute): Dùng hàm .reduce() để tự động tính toán tổng số lượng (totalItem) và tổng số tiền (totalPrice) ngay trước câu lệnh return.
+   - Code quan trọng:
+     const totalItem = listCart.reduce((total, item) => total + Number(item.quantityBuy), 0);
+     const totalPrice = listCart.reduce((total, item) => total + (item.product.price * item.quantityBuy), 0);
+
+3. Tại file Cart.jsx:
+   - Nhận item và index từ ListCart để đổ dữ liệu vào từng dòng <tr> (STT, Tên, Giá, Thành tiền = Price * quantityBuy).
+
+==============================================================================
+BƯỚC D: NÂNG CẤP CHỨC NĂNG UPDATE VÀ DELETE TRONG GIỎ HÀNG
+- Mục tiêu: Sửa số lượng hoặc xóa sản phẩm ngay tại giỏ hàng và đồng bộ cứng dữ liệu.
+
+1. Chức năng XÓA (Delete)
+   - Tại App.jsx: Viết hàm handlerDelete(idProduct). Dùng .filter() để lọc bỏ sản phẩm trùng ID. Truyền hàm này xuống thông qua <ListCart onDelete={handlerDelete} />.
+   - Code quan trọng:
+     let newListCart = listCart.filter((item) => item.product.id !== idProduct);
+   - Tại ListCart.jsx: Nhận onDelete từ props và tiếp tục ném xuống cho <Cart onDelete={onDelete} />.
+   - Tại Cart.jsx: Bắt sự kiện onClick vào thẻ <a> Delete, gọi hàm onDelete(item.product.id) để kích hoạt luồng xóa ngược lên App.
+
+2. Chức năng CẬP NHẬT SỐ LƯỢNG (Update)
+   - Tại Cart.jsx (Quan trọng nhất):
+     * Biến ô input số lượng trong giỏ hàng thành Local State bằng cách khai báo: const [quantity, setQuantity] = useState(item.quantityBuy);
+     * Dùng useEffect để đồng bộ: Nếu giỏ hàng ở App tăng (do bấm mua thêm ở ngoài), ô input này phải tự cập nhật theo qua dependency [item.quantityBuy].
+     * Đổi thuộc tính ô input thành value={quantity} và gắn onChange={handlerChangeQuantity}.
+     * Bắt sự kiện onClick vào thẻ <a> Update, gọi hàm onUpdate(item.product.id, quantity) gửi cả ID và số lượng mới lên.
+   - Tại ListCart.jsx: Nhận onUpdate từ App và chuyển tiếp xuống cho Cart.
+   - Tại App.jsx: Viết hàm handlerUpdate(idProduct, newQuantity). Dùng .findIndex() để tìm sản phẩm, ghi đè số lượng mới: newListCart[index].quantityBuy = Number(newQuantity);, sau đó setListCart(newListCart).
+
+==============================================================================
+BƯỚC E: ĐỒNG BỘ DỮ LIỆU BỀN VỮNG (LocalStorage)
+- Mục tiêu: F5 không bị mất giỏ hàng.
+
+1. Sửa lại khởi tạo State tại App.jsx:
+   - Thay vì khởi tạo bằng mảng rỗng [], ta dùng một hàm (gọi là Lazy initial state) để check xem trong trình duyệt có dữ liệu cũ chưa.
+   - Code quan trọng:
+     const [listCart, setListCart] = useState(() => {
+       const saveCart = localStorage.getItem("cartData");
+       return saveCart ? JSON.parse(saveCart) : [];
+     });
+
+2. Đồng bộ khi có biến động:
+   - Tại cả 3 hàm xử lý dữ liệu ở App.jsx (handlerBuy, handlerDelete, handlerUpdate), ngay trước dòng setListCart, bạn chèn thêm dòng code lưu dữ liệu vào trình duyệt. Lưu ý phải dùng chung một tên Key thống nhất là "cartData".
+   - Code quan trọng:
+     localStorage.setItem("cartData", JSON.stringify(mảng_mới));
           
 
 

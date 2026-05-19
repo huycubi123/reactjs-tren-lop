@@ -135,7 +135,7 @@ function Product(props) {
                 value={quantityBuy} // giá trị của input được lấy từ state quantityBuy
                 min={1} 
                 max={product.quantity} // giới hạn số lượng mua tối thiểu là 1 và tối đa là số lượng tồn kho
-                onChange={handlerChangeQuantity}
+                onChange={handlerChangeQuantity}  // gọi hàm handlerChangeQuantity khi người dùng thay đổi giá trị input
               />
 
               {/* Nút mua hàng */}
